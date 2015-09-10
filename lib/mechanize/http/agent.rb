@@ -796,8 +796,12 @@ class Mechanize::HTTP::Agent
       end
 
     return body_io if length.zero?
+    
+    # Fixed: 在某些301, 302重定向情况下对没有gzip过的Content做gunzip导致出错的问题；
+    # nowazhu@gmail.com
+    content_encoding = ["302", "301"].include?(response.code.to_s) ? 'none' : response['Content-Encoding']
 
-    out_io = case response['Content-Encoding']
+    out_io = case content_encoding
              when nil, 'none', '7bit', "" then
                body_io
              when 'deflate' then
